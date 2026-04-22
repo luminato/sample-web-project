@@ -14,11 +14,10 @@ pipeline {
     string(name: 'CLIENT_NAME', defaultValue: 'demo-client', description: 'Nome do cliente')
     string(name: 'ENVIRONMENT_NAME', defaultValue: 'jenkins', description: 'Nome do ambiente')
     string(name: 'BASE_URL_OVERRIDE', defaultValue: '', description: 'Sobrescrever URL base, se necessário')
-    string(name: 'GITHUB_PACKAGES_USER', defaultValue: 'luminato', description: 'Usuário/organização do GitHub Packages')
+    string(name: 'GITHUB_PACKAGES_USER', defaultValue: 'luminatoqa', description: 'Usuário/organização do GitHub Packages')
   }
 
   environment {
-    MAVEN_CMD = isUnix() ? 'mvn' : 'mvn.cmd'
     MAVEN_SETTINGS = 'settings-ci.xml'
     GITHUB_PACKAGES_CREDENTIALS_ID = 'github-packages-token'
   }
@@ -34,19 +33,20 @@ pipeline {
       steps {
         withCredentials([string(credentialsId: env.GITHUB_PACKAGES_CREDENTIALS_ID, variable: 'GITHUB_PACKAGES_TOKEN')]) {
           script {
+            def mavenCmd = isUnix() ? 'mvn' : 'mvn.cmd'
             def settingsXml = """<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-<settings xmlns=\"http://maven.apache.org/SETTINGS/1.0.0\"
-          xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"
-          xsi:schemaLocation=\"http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd\">
-  <servers>
-    <server>
-      <id>github</id>
-      <username>${params.GITHUB_PACKAGES_USER}</username>
-      <password>${GITHUB_PACKAGES_TOKEN}</password>
-    </server>
-  </servers>
-</settings>
-"""
+                                  <settings xmlns=\"http://maven.apache.org/SETTINGS/1.0.0\"
+                                            xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"
+                                            xsi:schemaLocation=\"http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd\">
+                                    <servers>
+                                      <server>
+                                        <id>github</id>
+                                        <username>${params.GITHUB_PACKAGES_USER}</username>
+                                        <password>${GITHUB_PACKAGES_TOKEN}</password>
+                                      </server>
+                                    </servers>
+                                  </settings>
+                                  """
             writeFile file: env.MAVEN_SETTINGS, text: settingsXml
           }
         }
@@ -56,10 +56,11 @@ pipeline {
     stage('Install Browser') {
       steps {
         script {
+          def mavenCmd = isUnix() ? 'mvn' : 'mvn.cmd'
           if (isUnix()) {
-            sh "${env.MAVEN_CMD} -s ${env.MAVEN_SETTINGS} exec:java \"-Dexec.mainClass=com.microsoft.playwright.CLI\" \"-Dexec.args=install chromium\""
+            sh "${mavenCmd} -s ${env.MAVEN_SETTINGS} exec:java \"-Dexec.mainClass=com.microsoft.playwright.CLI\" \"-Dexec.args=install chromium\""
           } else {
-            bat "${env.MAVEN_CMD} -s ${env.MAVEN_SETTINGS} exec:java \"-Dexec.mainClass=com.microsoft.playwright.CLI\" \"-Dexec.args=install chromium\""
+            bat "${mavenCmd} -s ${env.MAVEN_SETTINGS} exec:java \"-Dexec.mainClass=com.microsoft.playwright.CLI\" \"-Dexec.args=install chromium\""
           }
         }
       }
@@ -68,6 +69,7 @@ pipeline {
     stage('Run Tests') {
       steps {
         script {
+          def mavenCmd = isUnix() ? 'mvn' : 'mvn.cmd'
           def goals = ['-B', 'clean', 'test']
           if (params.GENERATE_ALLURE) {
             goals << 'allure:report'
@@ -78,7 +80,7 @@ pipeline {
             extraArgs << "-Dbase.url=${params.BASE_URL_OVERRIDE}"
           }
 
-          def fullCommand = "${env.MAVEN_CMD} -s ${env.MAVEN_SETTINGS} ${goals.join(' ')} ${extraArgs.join(' ')}"
+          def fullCommand = "${mavenCmd} -s ${env.MAVEN_SETTINGS} ${goals.join(' ')} ${extraArgs.join(' ')}"
           echo "Executando: ${fullCommand}"
 
           if (isUnix()) {
