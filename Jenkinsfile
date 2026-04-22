@@ -75,7 +75,7 @@ pipeline {
             goals << 'allure:report'
           }
 
-          def extraArgs = ["-P${params.PROFILE_NAME}", "-Dclient.name=${params.CLIENT_NAME}", "-Denvironment.name=${params.ENVIRONMENT_NAME}", "-Ddb.enabled=${params.DB_ENABLED}"]
+          def extraArgs = ["-P${params.PROFILE_NAME}", "-Dclient.name=${params.CLIENT_NAME}", "-Denvironment.name=${params.ENVIRONMENT_NAME}", "-Ddb.enabled=${params.DB_ENABLED}", "-Dheadless=true"]
           if (params.BASE_URL_OVERRIDE?.trim()) {
             extraArgs << "-Dbase.url=${params.BASE_URL_OVERRIDE}"
           }
