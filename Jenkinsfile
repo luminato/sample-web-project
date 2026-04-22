@@ -58,9 +58,9 @@ pipeline {
         script {
           def mavenCmd = isUnix() ? 'mvn' : 'mvn.cmd'
           if (isUnix()) {
-            sh "${mavenCmd} -s ${env.MAVEN_SETTINGS} exec:java \"-Dexec.mainClass=com.microsoft.playwright.CLI\" \"-Dexec.args=install chromium\""
+            sh "${mavenCmd} -s ${env.MAVEN_SETTINGS} exec:java -Dexec.classpathScope=test \"-Dexec.mainClass=com.microsoft.playwright.CLI\" \"-Dexec.args=install chromium\""
           } else {
-            bat "${mavenCmd} -s ${env.MAVEN_SETTINGS} exec:java \"-Dexec.mainClass=com.microsoft.playwright.CLI\" \"-Dexec.args=install chromium\""
+            bat "${mavenCmd} -s ${env.MAVEN_SETTINGS} exec:java -Dexec.classpathScope=test \"-Dexec.mainClass=com.microsoft.playwright.CLI\" \"-Dexec.args=install chromium\""
           }
         }
       }
