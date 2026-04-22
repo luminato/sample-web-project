@@ -1,0 +1,10 @@
+[
+  {
+    "name": "Falhas de validação funcional",
+    "matchedStatuses": ["failed"]
+  },
+  {
+    "name": "Erros de ambiente ou automação",
+    "matchedStatuses": ["broken"]
+  }
+]

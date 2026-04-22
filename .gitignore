@@ -1,0 +1,11 @@
+target/
+.idea/
+.vscode/
+*.iml
+settings-ci.xml
+allure-results/
+allure-report/
+**/settings.xml
+.env
+*.secret
+*.token
