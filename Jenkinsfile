@@ -5,6 +5,7 @@ pipeline {
     timestamps()
     ansiColor('xterm')
     disableConcurrentBuilds()
+    skipDefaultCheckout(true)
   }
 
   parameters {
@@ -25,6 +26,7 @@ pipeline {
   stages {
     stage('Checkout') {
       steps {
+        deleteDir()
         checkout scm
       }
     }
@@ -97,12 +99,27 @@ pipeline {
     always {
       junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
       archiveArtifacts artifacts: 'target/site/allure-maven-plugin/**, target/qa-metrics/**, target/allure-results/**', fingerprint: true, allowEmptyArchive: true
-      allure([
-        includeProperties: false,
-        jdk: '',
-        results: [[path: 'target/allure-results']]
-      ])
-      cleanWs(cleanWhenNotBuilt: false, deleteDirs: false, disableDeferredWipeout: true)
+      script {
+        if (params.GENERATE_ALLURE) {
+          // Fallback para HTML Publisher quando o Allure CLI do Jenkins nao estiver configurado.
+          catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
+            allure([
+              includeProperties: false,
+              jdk: '',
+              results: [[path: 'target/allure-results']]
+            ])
+          }
+          publishHTML(target: [
+            allowMissing: true,
+            alwaysLinkToLastBuild: true,
+            keepAll: true,
+            reportDir: 'target/site/allure-maven-plugin',
+            reportFiles: 'index.html',
+            reportName: 'Allure HTML Report'
+          ])
+        }
+      }
+      cleanWs(cleanWhenNotBuilt: false, deleteDirs: true, disableDeferredWipeout: true)
     }
   }
 }

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- Appender padrão: exibe no console somente o que passar pelo filtro -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Root: somente ERROR e acima aparecem por padrão -->
+    <root level="ERROR">
+        <appender-ref ref="CONSOLE" />
+    </root>
+
+    <!--
+        Para habilitar logs de um pacote específico (seus testes ou classes de suporte),
+        adicione entradas como as abaixo:
+
+        <logger name="br.com.lumin.qa" level="INFO" />
+        <logger name="br.com.lumin.qa.tests" level="DEBUG" />
+    -->
+
+</configuration>
