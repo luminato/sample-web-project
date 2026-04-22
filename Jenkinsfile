@@ -21,6 +21,7 @@ pipeline {
   environment {
     MAVEN_SETTINGS = 'settings-ci.xml'
     GITHUB_PACKAGES_CREDENTIALS_ID = 'github-packages-token'
+    MAVEN_LOG_ARGS = '-q -ntp -Dorg.slf4j.simpleLogger.defaultLogLevel=error'
   }
 
   stages {
@@ -60,9 +61,9 @@ pipeline {
         script {
           def mavenCmd = isUnix() ? 'mvn' : 'mvn.cmd'
           if (isUnix()) {
-            sh "${mavenCmd} -s ${env.MAVEN_SETTINGS} exec:java -Dexec.classpathScope=test \"-Dexec.mainClass=com.microsoft.playwright.CLI\" \"-Dexec.args=install chromium\""
+            sh "${mavenCmd} ${env.MAVEN_LOG_ARGS} -s ${env.MAVEN_SETTINGS} exec:java -Dexec.classpathScope=test \"-Dexec.mainClass=com.microsoft.playwright.CLI\" \"-Dexec.args=install chromium\""
           } else {
-            bat "${mavenCmd} -s ${env.MAVEN_SETTINGS} exec:java -Dexec.classpathScope=test \"-Dexec.mainClass=com.microsoft.playwright.CLI\" \"-Dexec.args=install chromium\""
+            bat "${mavenCmd} ${env.MAVEN_LOG_ARGS} -s ${env.MAVEN_SETTINGS} exec:java -Dexec.classpathScope=test \"-Dexec.mainClass=com.microsoft.playwright.CLI\" \"-Dexec.args=install chromium\""
           }
         }
       }
@@ -72,18 +73,24 @@ pipeline {
       steps {
         script {
           def mavenCmd = isUnix() ? 'mvn' : 'mvn.cmd'
-          def goals = ['-B', 'clean', 'test']
-          if (params.GENERATE_ALLURE) {
-            goals << 'allure:report'
-          }
+          def goals = ['clean', 'test']
 
-          def extraArgs = ["-P${params.PROFILE_NAME}", "-Dclient.name=${params.CLIENT_NAME}", "-Denvironment.name=${params.ENVIRONMENT_NAME}", "-Ddb.enabled=${params.DB_ENABLED}", "-Dheadless=true"]
+          def extraArgs = [
+            "-P${params.PROFILE_NAME}",
+            "-Dclient.name=${params.CLIENT_NAME}",
+            "-Denvironment.name=${params.ENVIRONMENT_NAME}",
+            "-Ddb.enabled=${params.DB_ENABLED}",
+            "-Dheadless=true",
+            "-Dlogging.level.org.hibernate=ERROR",
+            "-Dlogging.level.org.hibernate.SQL=ERROR",
+            "-Dorg.slf4j.simpleLogger.log.org.hibernate=error",
+            "-Dorg.slf4j.simpleLogger.log.org.hibernate.SQL=error"
+          ]
           if (params.BASE_URL_OVERRIDE?.trim()) {
             extraArgs << "-Dbase.url=${params.BASE_URL_OVERRIDE}"
           }
 
-          def fullCommand = "${mavenCmd} -s ${env.MAVEN_SETTINGS} ${goals.join(' ')} ${extraArgs.join(' ')}"
-          echo "Executando: ${fullCommand}"
+          def fullCommand = "${mavenCmd} ${env.MAVEN_LOG_ARGS} -s ${env.MAVEN_SETTINGS} ${goals.join(' ')} ${extraArgs.join(' ')}"
 
           if (isUnix()) {
             sh fullCommand
@@ -101,22 +108,19 @@ pipeline {
       archiveArtifacts artifacts: 'target/site/allure-maven-plugin/**, target/qa-metrics/**, target/allure-results/**', fingerprint: true, allowEmptyArchive: true
       script {
         if (params.GENERATE_ALLURE) {
-          // Fallback para HTML Publisher quando o Allure CLI do Jenkins nao estiver configurado.
-          catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-            allure([
-              includeProperties: false,
-              jdk: '',
-              results: [[path: 'target/allure-results']]
-            ])
+          if (fileExists('target/allure-results')) {
+            // Publica o relatorio no painel do plugin Allure para avaliacao no Jenkins.
+            catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
+              allure([
+                includeProperties: false,
+                jdk: '',
+                reportBuildPolicy: 'ALWAYS',
+                results: [[path: 'target/allure-results']]
+              ])
+            }
+          } else {
+            echo 'Allure nao publicado: pasta target/allure-results nao encontrada.'
           }
-          publishHTML(target: [
-            allowMissing: true,
-            alwaysLinkToLastBuild: true,
-            keepAll: true,
-            reportDir: 'target/site/allure-maven-plugin',
-            reportFiles: 'index.html',
-            reportName: 'Allure HTML Report'
-          ])
         }
       }
       cleanWs(cleanWhenNotBuilt: false, deleteDirs: true, disableDeferredWipeout: true)
