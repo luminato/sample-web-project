@@ -97,13 +97,10 @@ pipeline {
     always {
       junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
       archiveArtifacts artifacts: 'target/site/allure-maven-plugin/**, target/qa-metrics/**, target/allure-results/**', fingerprint: true, allowEmptyArchive: true
-      publishHTML(target: [
-        allowMissing: true,
-        alwaysLinkToLastBuild: true,
-        keepAll: true,
-        reportDir: 'target/site/allure-maven-plugin',
-        reportFiles: 'index.html',
-        reportName: 'Allure HTML Report'
+      allure([
+        includeProperties: false,
+        jdk: '',
+        results: [[path: 'target/allure-results']]
       ])
       cleanWs(cleanWhenNotBuilt: false, deleteDirs: false, disableDeferredWipeout: true)
     }
