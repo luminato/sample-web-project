@@ -10,6 +10,7 @@ pipeline {
 
   parameters {
     choice(name: 'PROFILE_NAME', choices: ['smoke-local', 'smoke-mobile', 'regression-parallel', 'demo-apresentacao', 'nightly-complete'], description: 'Perfil de execução da suíte')
+    choice(name: 'TEST_SCOPE', choices: ['critical', 'regression', 'full'], description: 'Escopo dos testes: críticos, regressão ou suíte completa')
     booleanParam(name: 'GENERATE_ALLURE', defaultValue: true, description: 'Gerar o relatório HTML do Allure')
     booleanParam(name: 'DB_ENABLED', defaultValue: false, description: 'Persistir métricas no banco')
     string(name: 'CLIENT_NAME', defaultValue: 'demo-client', description: 'Nome do cliente')
@@ -86,6 +87,13 @@ pipeline {
             "-Dorg.slf4j.simpleLogger.log.org.hibernate=error",
             "-Dorg.slf4j.simpleLogger.log.org.hibernate.SQL=error"
           ]
+
+          if (params.TEST_SCOPE == 'critical') {
+            extraArgs << '-Dtest.groups=critical'
+          } else if (params.TEST_SCOPE == 'regression') {
+            extraArgs << '-Dtest.groups=regression'
+          }
+
           if (params.BASE_URL_OVERRIDE?.trim()) {
             extraArgs << "-Dbase.url=${params.BASE_URL_OVERRIDE}"
           }

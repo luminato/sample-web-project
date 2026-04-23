@@ -80,6 +80,7 @@ class RegressionTests extends BaseTest {
 
     @Test
     @Tag("regression")
+    @Tag("critical")
     @Severity(SeverityLevel.CRITICAL)
     @Story("Validação de checkout")
     @DisplayName("Regressão - checkout exige dados obrigatórios")

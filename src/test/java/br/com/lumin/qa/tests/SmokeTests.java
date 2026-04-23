@@ -23,6 +23,7 @@ class SmokeTests extends BaseTest {
 
     @Test
     @Tag("smoke")
+    @Tag("critical")
     @Severity(SeverityLevel.BLOCKER)
     @Story("Acesso ao catálogo")
     @DisplayName("Smoke - usuário padrão acessa o catálogo")
@@ -40,6 +41,7 @@ class SmokeTests extends BaseTest {
 
     @Test
     @Tag("smoke")
+    @Tag("critical")
     @Severity(SeverityLevel.CRITICAL)
     @Story("Validação de credenciais")
     @DisplayName("Smoke - sistema bloqueia login inválido")
@@ -55,6 +57,7 @@ class SmokeTests extends BaseTest {
 
     @Test
     @Tag("smoke")
+    @Tag("critical")
     @Severity(SeverityLevel.CRITICAL)
     @Story("Catálogo inicial")
     @DisplayName("Smoke - catálogo carrega com os produtos esperados")
@@ -71,6 +74,7 @@ class SmokeTests extends BaseTest {
 
     @Test
     @Tag("smoke")
+    @Tag("critical")
     @Severity(SeverityLevel.BLOCKER)
     @Story("Checkout")
     @DisplayName("Smoke - usuário conclui checkout com sucesso")
